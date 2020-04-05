@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const _ = require('underscore');
 
 const Usuario = require('../models/usuario');
+const { verificaToken, verificaAdmin_role } = require('../middlewares/autentificacion')
 
 const app = express();
 
@@ -11,7 +12,7 @@ app.get('/', function (req, res) {
     res.json('Hello World')
 });
 
-app.get('/usuario', function (req, res) {
+app.get('/usuario', verificaToken, (req, res) => {
 
     let desde = req.query.desde || 0;
     desde = Number(desde);
@@ -31,7 +32,7 @@ app.get('/usuario', function (req, res) {
                 });
             }
 
-            Usuario.countDocuments({ estado: true}, (err, conteo) => {
+            Usuario.countDocuments({ estado: true }, (err, conteo) => {
 
                 res.json({
                     ok: true,
@@ -43,7 +44,7 @@ app.get('/usuario', function (req, res) {
         });
 });
 
-app.post('/usuario', function (req, res) {
+app.post('/usuario', [verificaToken, verificaAdmin_role], (req, res) => {
 
     let body = req.body;
 
@@ -71,7 +72,7 @@ app.post('/usuario', function (req, res) {
     });
 });
 
-app.put('/usuario/:id', function (req, res) {
+app.put('/usuario/:id', [verificaToken, verificaAdmin_role], (req, res) => {
 
     let id = req.params.id;
     let body = _.pick(req.body, ['nombre', 'email', 'img', 'role', 'estado']);
@@ -94,10 +95,9 @@ app.put('/usuario/:id', function (req, res) {
 
 });
 
-app.delete('/usuario/:id', function (req, res) {
+app.delete('/usuario/:id', [verificaToken, verificaAdmin_role], (req, res) => {
 
     let id = req.params.id;
-
 
     //Este comando me elimina un usuario de la base de datos
     //ahora solo necesito cambiar el estado a false
